@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+#remove garbaaaagefolder from git
+garbaaaage/
