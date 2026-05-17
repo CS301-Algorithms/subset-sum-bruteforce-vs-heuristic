@@ -788,7 +788,7 @@ as the best feasible option.
 \subsection{Heuristic Algorithm}
 
 
-In this section the heuristic algorithm was implemented and a initial testing was carried out using the Random Instance Generator from section 4. A combination of Guaranteed-solution and Random-target mode was used. An epsilon of 0.10 was used to have a relatively close approximation whilst at the same time not taking too long to compute.
+In this section the heuristic algorithm was implemented and an initial testing was carried out using the Random Instance Generator from Section 4. A combination of guaranteed-solution and random-target mode was used, with $\varepsilon = 0.10$ as the approximation parameter.
 
 \begin{table}[H]
   \centering
@@ -866,7 +866,7 @@ In this section the time complexity of the heuristic algorithm introduced in sec
     300 &  8 & 1.720530 & 0.048368 & 0.0281 & Yes & Yes \\
     \bottomrule
   \end{tabular}
-  \caption{Performance testing results for \texttt{fptas\_subset\_sum} with \(\epsilon = 0.10\). The value \(b\) is the half-width of the 90\% confidence interval around the mean runtime.}
+  \caption{Performance testing results for \texttt{fptas\_subset\_sum} with \(\varepsilon = 0.10\). The value \(b\) is the half-width of the 90\% confidence interval around the mean runtime.}
   \label{tab:section6-performance-results}
 \end{table}
 
@@ -884,9 +884,13 @@ We can also look at the run time from another perspective as seen in Figure~\ref
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\linewidth]{section6_loglog_fit.png}
-    \caption{log runtime vs input size graph}
+    \caption{Log-log plot of mean runtime vs input size with power-law fit}
     \label{fig:section6-loglog-fit}
 \end{figure}
+
+Fitting a power law $T(n) \approx c \cdot n^{\alpha}$ to the log-log data gives the empirical runtime expression derived from the slope of the fitted line. The exponent $\alpha$ can be read from the slope; values close to 2 would be consistent with the theoretical $O(n^2)$ term in the complexity bound.
+
+One notable observation is that the measured runtime at $n = 200$ (0.345 s) is lower than at $n = 175$ (0.729 s). This is not a measurement error: the FPTAS runtime depends not only on $n$ but also on the target value $k$, which is drawn randomly. A smaller target produces a shorter initial candidate list, so the algorithm finishes faster regardless of $n$. This instance-level variance is expected and does not contradict the worst-case bound.
 
 % ===============================================================
 \section{Experimental Analysis of the Quality}
