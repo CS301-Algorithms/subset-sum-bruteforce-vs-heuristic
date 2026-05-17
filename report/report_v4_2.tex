@@ -871,6 +871,8 @@ In this section the time complexity of the heuristic algorithm introduced in sec
 \end{table}
 
 
+All sizes except $n = 50$ met the $b/a < 0.1$ threshold. At $n = 50$, the 40-repetition cap was reached before the interval narrowed enough ($b/a = 0.1334$). The high variance at this size is due to the FPTAS runtime depending on the randomly drawn target $k$: at $n = 50$ the target can vary widely relative to the element sum, causing runtimes across repetitions to spread more than at neighbouring sizes. All other sizes achieved the threshold within the minimum 8 repetitions, so the overall dataset is still reliable for fitting.
+
 \subsubsection*{Comparing runtime to input size}
 Figure~\ref{fig:section6-runtime-ci}, as expected, shows that there is an increase in mean runtime as the input size increases. The confidence intervals can be seen as vertical lines at each point on the graph.
 \begin{figure}[H]
