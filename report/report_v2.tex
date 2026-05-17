@@ -127,8 +127,8 @@ Formally:
 \]
 
 For example, given $S = \{3, 1, 4, 2, 6\}$ and $k = 7$, the answer is YES
-because $\{1, 6\}$ sums to 7. If $k = 15$, the answer is NO because the
-total sum of all elements is only 16, and no proper subset reaches 15.
+because $\{1, 6\}$ sums to 7. If $k = 17$, the answer is NO because the
+total sum of all elements is only 16, so no subset can reach 17.
 
 % ---------------------------------------------------------------
 \subsection{Optimization Problem}
@@ -345,7 +345,7 @@ or dynamic programming structure is used.
 \subsubsection{Overview}
 
 The algorithm chosen for this problem is a fully polynomial-time approximation scheme
-(FPTAS) (book, p.~1150). An approximation scheme is a type of approximation algorithm
+(FPTAS)~\cite{clrs} (Section~35.5). An approximation scheme is a type of approximation algorithm
 that has the ability to achieve better and better approximation at the cost of more
 computation time.
 
@@ -372,6 +372,10 @@ So our procedure:
     \item returns a value $z$ whose value is within a $1+\varepsilon$ factor of the
     optimal solution.
 \end{itemize}
+
+\noindent\textit{Note on notation.} This section follows the variable names used
+in the original source~\cite{clrs}, where the target is denoted $t$. Elsewhere
+in this report the target is called $k$; the two are interchangeable.
 
 We use an iterative procedure that, in iteration $i$, computes the sums of all subsets
 of $\{x_1, x_2, \ldots, x_i\}$ using as a starting point the sums of all subsets of
@@ -483,7 +487,111 @@ Total auxiliary space (not counting the input):
 \]
 
 \subsection{Heuristic Algorithm}
-\textit{[This section is authored by Person 2.]}
+
+\subsubsection{Correctness Analysis}
+
+\begin{theorem}
+  The \textsc{Approx-Subset-Sum} algorithm always returns a feasible result,
+  and the returned value $z^*$ satisfies
+  \[
+    \frac{\mathrm{OPT}}{1+\varepsilon} \;\leq\; z^* \;\leq\; \mathrm{OPT},
+  \]
+  where $\mathrm{OPT}$ is the maximum subset sum not exceeding $k$.
+\end{theorem}
+
+The proof has two parts.
+
+\paragraph{Feasibility.}
+After each element $x_i$ is processed, every candidate whose sum exceeds $k$ is
+explicitly removed from the list (line~6 of \textsc{Approx-Subset-Sum}). Since the
+initial list contains only the value $0$ (the empty subset), and every candidate that
+survives a step has sum at most $k$, all candidates in the final list $L_n$ are
+feasible. The returned value $z^* = \max L_n$ is therefore at most $k$.
+
+\paragraph{Approximation ratio.}
+The key observation is that the \textsc{Trim} step may remove a candidate $y$ from the
+list only when a representative $z$ with $z \leq y \leq z(1+\delta)$ is already
+present. No candidate is dropped unless a nearby one remains to take its place.
+
+Let $\delta = \varepsilon / (2n)$. By an inductive argument over the $n$ iterations,
+one can show that after step $i$ the list $L_i$ contains a value $\hat{y}_i$ such that
+\[
+  \mathrm{OPT}_i \;\leq\; \hat{y}_i \cdot (1+\delta)^i,
+\]
+where $\mathrm{OPT}_i$ is the best achievable sum using the first $i$ elements.
+At $i = n$ this gives $\mathrm{OPT} \leq z^* \cdot (1+\delta)^n$.
+
+Bounding the accumulated error factor using $(1 + x)^n \leq e^{nx}$:
+\[
+  (1+\delta)^n
+    = \!\left(1 + \frac{\varepsilon}{2n}\right)^{\!n}
+    \leq e^{\,\varepsilon/2}.
+\]
+For $0 < \varepsilon \leq 1$, the inequality $e^x \leq 1/(1-x)$ and $x \leq 1/2$ give
+$e^{\varepsilon/2} \leq 1 + \varepsilon$. Therefore:
+\[
+  \mathrm{OPT} \;\leq\; z^* \cdot (1+\varepsilon)
+  \quad\Longrightarrow\quad
+  z^* \;\geq\; \frac{\mathrm{OPT}}{1+\varepsilon}.
+\]
+The complete formal proof, including the inductive step, is given in~\cite{clrs}
+(Theorem~35.7, Section~35.5).
+
+Note: for the Subset Sum optimization problem, correctness in the context of a
+heuristic means producing a valid feasible result, not necessarily the optimal one.
+The approximation ratio above bounds how far from optimal the result can be.
+
+\subsubsection{Time Complexity Analysis}
+
+The bound on the list size drives the analysis. After \textsc{Trim} with
+$\delta = \varepsilon/(2n)$, consecutive elements in the list differ by a factor of
+more than $(1+\delta)$. If the smallest nonzero element is at least $1$ and the
+largest is at most $t$ (the target), the number of elements in the list is at most:
+\[
+  \left\lfloor \log_{1+\delta}(t) \right\rfloor + 2
+  \;=\; \left\lfloor \frac{\ln t}{\ln(1+\delta)} \right\rfloor + 2
+  \;\leq\; \frac{\ln t}{\delta} + 2
+  \;=\; \frac{2n\ln t}{\varepsilon} + 2
+  \;=\; O\!\left(\frac{n \log t}{\varepsilon}\right).
+\]
+Call this bound $m$. Each of the $n$ outer iterations does the following work:
+\begin{itemize}[noitemsep]
+  \item Forming the shifted list ($L_{i-1} + x_i$): $O(m)$.
+  \item Merging the two lists and sorting: $O(m \log m)$.
+  \item Trimming: $O(m)$.
+  \item Filtering elements above $t$: $O(m)$.
+\end{itemize}
+The dominant step per iteration is $O(m \log m)$. Over all $n$ iterations:
+\[
+  T(n,\varepsilon,t) \;=\; O\!\left(n \cdot m \log m\right)
+  \;=\; O\!\left(\frac{n^2 \log t}{\varepsilon}
+               \cdot \log\!\left(\frac{n \log t}{\varepsilon}\right)\right).
+\]
+Since $\log(n \log t / \varepsilon) = O(\log n + \log\log t + \log(1/\varepsilon))$,
+this simplifies to:
+\[
+  \boxed{T(n,\varepsilon,t) \;=\; O\!\left(\frac{n^2 \log t \cdot \log(n/\varepsilon)}{\varepsilon}\right)}
+\]
+This is polynomial in $n$, $\log t$, and $1/\varepsilon$, which is exactly the condition
+for an FPTAS. Note that a tight $\Theta$ bound is harder to establish here because the
+list size depends on the actual values in each instance, so we state the $O$ bound.
+
+\subsubsection{Space Complexity Analysis}
+
+The candidate list at any step holds at most $m = O(n \log t / \varepsilon)$ pairs.
+Our implementation stores each candidate as a pair \texttt{(sum, subset)}, where the
+subset can contain up to $n$ elements. The space needed for the candidate list is
+therefore:
+\[
+  O(m \cdot n) \;=\; O\!\left(\frac{n^2 \log t}{\varepsilon}\right).
+\]
+The algorithm also uses $O(n)$ space for the input $S$ and a constant number of
+scalar variables. The dominant term is the candidate list, giving total auxiliary space:
+\[
+  \boxed{O\!\left(\frac{n^2 \log t}{\varepsilon}\right)}
+\]
+For the instances tested in Section~5.2 ($n \leq 130$, $t \leq$ a few thousand,
+$\varepsilon = 0.10$), this is well within available memory.
 
 
 % ===============================================================
@@ -636,10 +744,15 @@ matches in the random-target group are expected: when $k$ is chosen at random
 there is no guarantee an exact solution exists, and for roughly half of
 instances in this range, one happens to exist.
 
-The runtime grows visibly with $n$. At $n = 20$ the observed time is about
-3.3 ms, consistent with $2^{20} \approx 10^6$ iterations. Doubling $n$ to 40
-would require $2^{40} \approx 10^{12}$ iterations, making the algorithm
-infeasible beyond roughly $n = 25$ to $30$ on standard hardware.
+The runtime grows visibly with $n$. The slowest instance was instance 12
+($n = 12$, random $k$) at 0.002807 s, not the largest $n$ tested -- this
+happened because $k = 12$ left no early exit and the algorithm scanned all
+$2^{12} = 4096$ subsets. At $n = 20$ the algorithm exited early in both
+instances because exact matches were found quickly. These observations are
+consistent with $\Theta(n \cdot 2^n)$ behaviour: the constant factor depends
+on how early the optimal subset is encountered. Extrapolating to $n = 30$
+gives around $30 \times 10^9$ iterations, making the algorithm infeasible
+beyond roughly $n = 25$ to $30$ on standard hardware.
 
 No failures were found during testing. No fixes were needed.
 
@@ -676,7 +789,7 @@ as the best feasible option.
 
 The heuristic algorithm was implemented in Python as \texttt{fptas\_subset\_sum},
 following the fully polynomial-time approximation scheme described in Section~2.2.
-The implementation uses \(\epsilon = 0.10\). The report pseudocode returns only the
+The implementation uses \(\varepsilon = 0.10\). The report pseudocode returns only the
 approximate value, but the project notebook uses the shared \texttt{SubsetSumResult}
 interface. Therefore, each candidate in the list is stored as a pair \texttt{(sum, subset)}
 so that the implementation can return both the approximate sum and the actual subset
@@ -718,7 +831,7 @@ used random-target mode with seeds 400--409. Both groups used
     20 & 130 & 3585 & 3584 &   1 &  72 & No & Yes & 0.249228 & random $k$ \\
     \bottomrule
   \end{tabular}
-  \caption{Initial testing results for \texttt{fptas\_subset\_sum} with \(\epsilon = 0.10\).}
+  \caption{Initial testing results for \texttt{fptas\_subset\_sum} with \(\varepsilon = 0.10\).}
   \label{tab:heuristic-initial}
 \end{table}
 
